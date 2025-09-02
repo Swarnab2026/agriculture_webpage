@@ -312,6 +312,16 @@
             margin-bottom: 15px;
             font-size: 0.9em;
         }
+
+        .debug-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -319,6 +329,14 @@
         <div class="header">
             <h1>🌱 AgroSmart Dashboard</h1>
             <p>Smart Irrigation System for Jorethang, South Sikkim</p>
+        </div>
+        
+        <!-- Debug Panel -->
+        <div id="debugPanel" class="debug-panel">
+            <strong>Debug Info:</strong><br>
+            API Endpoint: <span id="debugApiUrl">--</span><br>
+            Last Response: <span id="debugLastResponse">--</span><br>
+            Connection Status: <span id="debugConnectionStatus">--</span>
         </div>
         
         <!-- Error indicator (hidden by default) -->
@@ -465,10 +483,16 @@
     </div>
 
     <script>
-        // Configuration
-        const API_ENDPOINT = '/api/sensor'; // Adjust this path based on your deployment
+        // Configuration - CHANGE THIS TO YOUR VERCEL URL
+        const API_ENDPOINT = 'https://agriculture-webpage.vercel.app/api/sensor';
         let isConnected = false;
         let lastDataTime = null;
+        
+        // Update debug panel
+        function updateDebugInfo() {
+            document.getElementById('debugApiUrl').textContent = API_ENDPOINT;
+            document.getElementById('debugConnectionStatus').textContent = isConnected ? 'Connected' : 'Disconnected';
+        }
         
         // Crop data stored in JSON format
         const cropDatabase = {
@@ -525,48 +549,60 @@
         // Fetch real sensor data from API
         async function fetchSensorData() {
             try {
+                console.log('🔄 Fetching data from:', API_ENDPOINT);
+                
                 const response = await fetch(API_ENDPOINT);
+                console.log('📡 Response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log('📊 Received data:', data);
+                document.getElementById('debugLastResponse').textContent = JSON.stringify(data);
+                
                 updateSensorDisplay(data);
                 setConnectionStatus(true);
                 lastDataTime = new Date();
                 return data;
                 
             } catch (error) {
-                console.error('Error fetching sensor data:', error);
+                console.error('❌ Error fetching sensor data:', error);
                 setConnectionStatus(false);
-                showError('Unable to connect to sensor API');
+                showError('Unable to connect to sensor API: ' + error.message);
+                document.getElementById('debugLastResponse').textContent = 'Error: ' + error.message;
                 return null;
             }
         }
 
         // Update the display with real sensor data
         function updateSensorDisplay(data) {
+            console.log('🔄 Updating display with data:', data);
             hideError();
             
             // Update temperature
-            if (data.temperature !== undefined) {
+            if (data.temperature !== undefined && data.temperature !== null) {
                 document.getElementById('temperature').textContent = data.temperature + '°C';
+                console.log('🌡️ Updated temperature:', data.temperature);
             }
             
             // Update humidity
-            if (data.humidity !== undefined) {
+            if (data.humidity !== undefined && data.humidity !== null) {
                 document.getElementById('humidity').textContent = data.humidity + '%';
+                console.log('💧 Updated humidity:', data.humidity);
             }
             
             // Update soil moisture
-            if (data.soil_moisture !== undefined) {
+            if (data.soil_moisture !== undefined && data.soil_moisture !== null) {
                 const moisture = Math.round(data.soil_moisture);
                 document.getElementById('soilMoisture').innerHTML = moisture + '<span class="sensor-unit">%</span>';
                 document.getElementById('moistureProgress').style.width = moisture + '%';
+                console.log('🌱 Updated soil moisture:', moisture);
             }
             
             // Update water level
-            if (data.water_level !== undefined) {
+            if (data.water_level !== undefined && data.water_level !== null) {
                 const waterLevel = Math.round(data.water_level);
                 document.getElementById('waterLevel').innerHTML = waterLevel + '<span class="sensor-unit">%</span>';
                 document.getElementById('waterProgress').style.width = waterLevel + '%';
@@ -574,6 +610,29 @@
                 // Calculate estimated rainwater volume (assuming 1000L tank capacity)
                 const rainwaterVolume = Math.round((waterLevel / 100) * 1000);
                 document.getElementById('rainwaterVolume').textContent = rainwaterVolume + 'L';
+                console.log('💧 Updated water level:', waterLevel);
+            }
+            
+            // Update pump status from API
+            if (data.pump_status !== undefined) {
+                const statusElement = document.getElementById('pumpStatus');
+                if (data.pump_status === 'on') {
+                    statusElement.textContent = 'ON';
+                    statusElement.style.color = '#2ecc71';
+                } else if (data.pump_status === 'off') {
+                    statusElement.textContent = 'OFF';
+                    statusElement.style.color = '#e74c3c';
+                } else {
+                    statusElement.textContent = 'IDLE';
+                    statusElement.style.color = '#f39c12';
+                }
+                console.log('⚡ Updated pump status:', data.pump_status);
+            }
+            
+            // Update last irrigation time
+            if (data.last_command !== undefined && data.pump_status === 'on') {
+                const lastTime = new Date(data.last_command);
+                document.getElementById('lastIrrigation').textContent = lastTime.toLocaleTimeString();
             }
             
             // Update status indicators
@@ -653,6 +712,8 @@
                 statusText.textContent = 'Offline';
                 statusText.style.color = '#e74c3c';
             }
+            
+            updateDebugInfo();
         }
 
         function showError(message) {
@@ -700,8 +761,10 @@
 
         async function togglePump(action) {
             try {
+                console.log('⚡ Sending pump command:', action);
+                
                 // Send pump command to API
-                const response = await fetch('/api/sensor/pump', {
+                const response = await fetch(API_ENDPOINT + '/pump', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -709,14 +772,40 @@
                     body: JSON.stringify({ command: action })
                 });
 
+                console.log('📡 Pump response status:', response.status);
+
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('Pump command sent:', result);
+                    console.log('✅ Pump command result:', result);
                     
                     // Update UI immediately for responsiveness
                     const statusElement = document.getElementById('pumpStatus');
                     if (action === 'on') {
-                        statusElement.textContent
+                        statusElement.textContent = 'ON';
+                        statusElement.style.color = '#2ecc71';
+                        addAlert('Irrigation pump started');
+                        simulateTelegramNotification('🚰 Irrigation pump started');
+                    } else {
+                        statusElement.textContent = 'OFF';
+                        statusElement.style.color = '#e74c3c';
+                        addAlert('Irrigation pump stopped');
+                        simulateTelegramNotification('⏹️ Irrigation pump stopped');
+                    }
+                    
+                    // Update last irrigation time
+                    document.getElementById('lastIrrigation').textContent = new Date().toLocaleTimeString();
+                    
+                } else {
+                    const error = await response.json();
+                    console.error('❌ Pump command failed:', error);
+                    addAlert('Failed to control pump: ' + (error.error || 'Unknown error'));
+                }
+                
+            } catch (error) {
+                console.error('❌ Error controlling pump:', error);
+                addAlert('Error controlling pump: ' + error.message);
+            }
+        }
 
         function addAlert(message) {
             const alertsList = document.getElementById('alertsList');
@@ -730,51 +819,4 @@
             
             // Keep only last 5 alerts
             const alerts = alertsList.children;
-            if (alerts.length > 5) {
-                alertsList.removeChild(alerts[alerts.length - 1]);
-            }
-        }
-
-        function simulateTelegramNotification(message) {
-            console.log('Telegram Notification:', message);
-            // In real implementation, this would send to Telegram Bot API
-        }
-
-        function updateLastUpdate() {
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleString();
-        }
-
-        // Check for stale data (if no updates for more than 2 minutes)
-        function checkDataFreshness() {
-            if (lastDataTime && (new Date() - lastDataTime) > 120000) { // 2 minutes
-                setConnectionStatus(false);
-                showError('No recent data from sensors. Last update: ' + lastDataTime.toLocaleTimeString());
-            }
-        }
-
-        // Initialize the dashboard
-        async function initDashboard() {
-            updateCropInfo();
-            updateLastUpdate();
-            
-            // Initial data fetch
-            await fetchSensorData();
-            
-            // Set up real-time updates every 10 seconds
-            setInterval(async () => {
-                await fetchSensorData();
-                updateLastUpdate();
-            }, 10000);
-            
-            // Check data freshness every 30 seconds
-            setInterval(checkDataFreshness, 30000);
-            
-            addAlert('Dashboard initialized - Connected to sensor network');
-        }
-
-        // Start the dashboard when page loads
-        document.addEventListener('DOMContentLoaded', initDashboard);
-    </script>
-</body>
-</html>
+            if (alerts.length >
