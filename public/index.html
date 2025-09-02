@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroSmart - Smart Irrigation Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            color: #666;
+            -webkit-text-fill-color: #666;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5em;
+        }
+        
+        .soil-moisture .card-icon {
+            background: linear-gradient(45deg, #8B4513, #D2691E);
+            color: white;
+        }
+        
+        .weather .card-icon {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .water-level .card-icon {
+            background: linear-gradient(45deg, #1abc9c, #16a085);
+            color: white;
+        }
+        
+        .pump-control .card-icon {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .crop-info .card-icon {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .alerts .card-icon {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+        
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .sensor-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #2ecc71;
+        }
+        
+        .sensor-unit {
+            font-size: 0.4em;
+            color: #7f8c8d;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-good { background: #2ecc71; }
+        .status-warning { background: #f39c12; }
+        .status-danger { background: #e74c3c; }
+        
+        .pump-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .crop-selector {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .crop-selector:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .crop-requirements {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .requirement-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .alert-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .alert-time {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .telegram-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .weather-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .weather-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .weather-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .weather-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 AgroSmart Dashboard</h1>
+            <p>Smart Irrigation System for Jorethang, South Sikkim</p>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Soil Moisture Card -->
+            <div class="card soil-moisture">
+                <div class="card-header">
+                    <div class="card-icon">🌱</div>
+                    <div class="card-title">Soil Moisture</div>
+                </div>
+                <div class="sensor-value" id="soilMoisture">45<span class="sensor-unit">%</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="moistureProgress" style="width: 45%"></div>
+                </div>
+                <div>
+                    <span class="status-indicator status-warning"></span>
+                    <span>Moderate - Irrigation recommended</span>
+                </div>
+            </div>
+            
+            <!-- Weather Monitoring Card -->
+            <div class="card weather">
+                <div class="card-header">
+                    <div class="card-icon">🌡️</div>
+                    <div class="card-title">Environmental Conditions</div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-item">
+                        <div class="weather-label">Temperature</div>
+                        <div class="weather-value" id="temperature">28°C</div>
+                    </div>
+                    <div class="weather-item">
+                        <div class="weather-label">Humidity</div>
+                        <div class="weather-value" id="humidity">65%</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <span class="status-indicator status-good"></span>
+                    <span>Optimal growing conditions</span>
+                </div>
+            </div>
+            
+            <!-- Water Level Card -->
+            <div class="card water-level">
+                <div class="card-header">
+                    <div class="card-icon">💧</div>
+                    <div class="card-title">Water Tank Level</div>
+                </div>
+                <div class="sensor-value" id="waterLevel">75<span class="sensor-unit">%</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="waterProgress" style="width: 75%"></div>
+                </div>
+                <div>
+                    <span class="status-indicator status-good"></span>
+                    <span>Sufficient water available</span>
+                </div>
+                <div style="margin-top: 15px; font-size: 0.9em; color: #7f8c8d;">
+                    Rainwater harvested: 450L
+                </div>
+            </div>
+            
+            <!-- Pump Control Card -->
+            <div class="card pump-control">
+                <div class="card-header">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-title">Irrigation Control</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div>Status: <span id="pumpStatus" style="font-weight: bold; color: #e74c3c;">OFF</span></div>
+                    <div style="font-size: 0.9em; color: #7f8c8d; margin-top: 5px;">
+                        Last irrigation: 2 hours ago
+                    </div>
+                </div>
+                <div class="pump-controls">
+                    <button class="btn btn-success" onclick="togglePump('on')">Start Pump</button>
+                    <button class="btn btn-danger" onclick="togglePump('off')">Stop Pump</button>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="autoMode()">Auto Mode</button>
+                </div>
+            </div>
+            
+            <!-- Crop Information Card -->
+            <div class="card crop-info">
+                <div class="card-header">
+                    <div class="card-icon">🌾</div>
+                    <div class="card-title">Crop Management</div>
+                </div>
+                <select class="crop-selector" id="cropSelector" onchange="updateCropInfo()">
+                    <option value="rice">Rice</option>
+                    <option value="wheat">Wheat</option>
+                    <option value="maize">Maize</option>
+                    <option value="tomato">Tomato</option>
+                    <option value="potato">Potato</option>
+                    <option value="cabbage">Cabbage</option>
+                </select>
+                <div class="crop-requirements" id="cropRequirements">
+                    <div class="requirement-item">
+                        <span>Optimal Moisture:</span>
+                        <span>60-70%</span>
+                    </div>
+                    <div class="requirement-item">
+                        <span>Growth Stage:</span>
+                        <span>Flowering</span>
+                    </div>
+                    <div class="requirement-item">
+                        <span>Water Frequency:</span>
+                        <span>Daily</span>
+                    </div>
+                    <div class="requirement-item">
+                        <span>Season:</span>
+                        <span>Kharif</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alerts & Notifications Card -->
+            <div class="card alerts">
+                <div class="card-header">
+                    <div class="card-icon">🔔</div>
+                    <div class="card-title">Alerts & Updates</div>
+                </div>
+                <div id="alertsList">
+                    <div class="alert-item">
+                        <div class="alert-time">2 minutes ago</div>
+                        <div>Soil moisture dropped below optimal level</div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-time">1 hour ago</div>
+                        <div>Irrigation cycle completed successfully</div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-time">3 hours ago</div>
+                        <div>Weather forecast: Light rain expected</div>
+                    </div>
+                </div>
+                <div class="telegram-status">
+                    <span>Telegram Bot Status:</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="connection-dot"></div>
+                        <span style="margin-left: 8px; color: #2ecc71;">Connected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>AgroSmart System - Empowering farmers in Jorethang with smart irrigation technology</p>
+            <p>Last updated: <span id="lastUpdate"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Crop data stored in JSON format
+        const cropDatabase = {
+            rice: {
+                optimalMoisture: "60-70%",
+                growthStage: "Flowering",
+                waterFrequency: "Daily",
+                season: "Kharif",
+                temperature: "20-35°C",
+                humidity: "80-90%"
+            },
+            wheat: {
+                optimalMoisture: "50-65%",
+                growthStage: "Grain filling",
+                waterFrequency: "Every 2-3 days",
+                season: "Rabi",
+                temperature: "15-25°C",
+                humidity: "50-70%"
+            },
+            maize: {
+                optimalMoisture: "55-70%",
+                growthStage: "Vegetative",
+                waterFrequency: "Daily",
+                season: "Kharif/Rabi",
+                temperature: "18-30°C",
+                humidity: "60-80%"
+            },
+            tomato: {
+                optimalMoisture: "65-75%",
+                growthStage: "Fruit development",
+                waterFrequency: "Daily",
+                season: "Year-round",
+                temperature: "20-30°C",
+                humidity: "60-70%"
+            },
+            potato: {
+                optimalMoisture: "55-65%",
+                growthStage: "Tuber formation",
+                waterFrequency: "Every 2 days",
+                season: "Rabi",
+                temperature: "15-20°C",
+                humidity: "70-80%"
+            },
+            cabbage: {
+                optimalMoisture: "70-80%",
+                growthStage: "Head formation",
+                waterFrequency: "Daily",
+                season: "Winter",
+                temperature: "15-25°C",
+                humidity: "60-75%"
+            }
+        };
+
+        // Simulate real-time data updates
+        function updateSensorData() {
+            // Simulate soil moisture changes
+            const moisture = Math.floor(Math.random() * 40) + 30; // 30-70%
+            document.getElementById('soilMoisture').innerHTML = moisture + '<span class="sensor-unit">%</span>';
+            document.getElementById('moistureProgress').style.width = moisture + '%';
+            
+            // Simulate temperature and humidity changes
+            const temp = Math.floor(Math.random() * 15) + 20; // 20-35°C
+            const humid = Math.floor(Math.random() * 30) + 50; // 50-80%
+            document.getElementById('temperature').textContent = temp + '°C';
+            document.getElementById('humidity').textContent = humid + '%';
+            
+            // Simulate water level changes
+            const waterLevel = Math.floor(Math.random() * 30) + 60; // 60-90%
+            document.getElementById('waterLevel').innerHTML = waterLevel + '<span class="sensor-unit">%</span>';
+            document.getElementById('waterProgress').style.width = waterLevel + '%';
+            
+            // Update status indicators based on values
+            updateStatusIndicators(moisture, temp, humid, waterLevel);
+        }
+
+        function updateStatusIndicators(moisture, temp, humid, waterLevel) {
+            const moistureStatus = document.querySelector('.soil-moisture .status-indicator');
+            const weatherStatus = document.querySelector('.weather .status-indicator');
+            const waterStatus = document.querySelector('.water-level .status-indicator');
+            
+            // Update moisture status
+            if (moisture < 40) {
+                moistureStatus.className = 'status-indicator status-danger';
+                moistureStatus.nextElementSibling.textContent = 'Low - Immediate irrigation needed';
+            } else if (moisture < 60) {
+                moistureStatus.className = 'status-indicator status-warning';
+                moistureStatus.nextElementSibling.textContent = 'Moderate - Irrigation recommended';
+            } else {
+                moistureStatus.className = 'status-indicator status-good';
+                moistureStatus.nextElementSibling.textContent = 'Good - Optimal moisture level';
+            }
+            
+            // Update water level status
+            if (waterLevel < 30) {
+                waterStatus.className = 'status-indicator status-danger';
+                waterStatus.nextElementSibling.textContent = 'Low water - Check rainwater system';
+            } else if (waterLevel < 60) {
+                waterStatus.className = 'status-indicator status-warning';
+                waterStatus.nextElementSibling.textContent = 'Moderate water level';
+            } else {
+                waterStatus.className = 'status-indicator status-good';
+                waterStatus.nextElementSibling.textContent = 'Sufficient water available';
+            }
+        }
+
+        function updateCropInfo() {
+            const selectedCrop = document.getElementById('cropSelector').value;
+            const cropData = cropDatabase[selectedCrop];
+            const requirementsDiv = document.getElementById('cropRequirements');
+            
+            requirementsDiv.innerHTML = `
+                <div class="requirement-item">
+                    <span>Optimal Moisture:</span>
+                    <span>${cropData.optimalMoisture}</span>
+                </div>
+                <div class="requirement-item">
+                    <span>Growth Stage:</span>
+                    <span>${cropData.growthStage}</span>
+                </div>
+                <div class="requirement-item">
+                    <span>Water Frequency:</span>
+                    <span>${cropData.waterFrequency}</span>
+                </div>
+                <div class="requirement-item">
+                    <span>Season:</span>
+                    <span>${cropData.season}</span>
+                </div>
+                <div class="requirement-item">
+                    <span>Temperature Range:</span>
+                    <span>${cropData.temperature}</span>
+                </div>
+                <div class="requirement-item">
+                    <span>Humidity Range:</span>
+                    <span>${cropData.humidity}</span>
+                </div>
+            `;
+        }
+
+        function togglePump(action) {
+            const statusElement = document.getElementById('pumpStatus');
+            if (action === 'on') {
+                statusElement.textContent = 'ON';
+                statusElement.style.color = '#2ecc71';
+                addAlert('Irrigation pump started');
+                // Simulate telegram notification
+                simulateTelegramNotification('🚰 Pump started - Irrigation in progress');
+            } else {
+                statusElement.textContent = 'OFF';
+                statusElement.style.color = '#e74c3c';
+                addAlert('Irrigation pump stopped');
+                simulateTelegramNotification('⏹️ Pump stopped - Irrigation completed');
+            }
+        }
+
+        function autoMode() {
+            addAlert('Auto mode activated - System will manage irrigation automatically');
+            simulateTelegramNotification('🤖 Auto mode enabled - Smart irrigation active');
+        }
+
+        function addAlert(message) {
+            const alertsList = document.getElementById('alertsList');
+            const newAlert = document.createElement('div');
+            newAlert.className = 'alert-item';
+            newAlert.innerHTML = `
+                <div class="alert-time">Just now</div>
+                <div>${message}</div>
+            `;
+            alertsList.insertBefore(newAlert, alertsList.firstChild);
+            
+            // Keep only last 5 alerts
+            const alerts = alertsList.children;
+            if (alerts.length > 5) {
+                alertsList.removeChild(alerts[alerts.length - 1]);
+            }
+        }
+
+        function simulateTelegramNotification(message) {
+            console.log('Telegram Notification:', message);
+            // In real implementation, this would send to Telegram Bot API
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString();
+        }
+
+        // Initialize the dashboard
+        function initDashboard() {
+            updateSensorData();
+            updateCropInfo();
+            updateLastUpdate();
+            
+            // Set up real-time updates every 5 seconds
+            setInterval(updateSensorData, 5000);
+            setInterval(updateLastUpdate, 60000);
+        }
+
+        // Start the dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
