@@ -400,9 +400,6 @@
                     <button class="btn btn-success" onclick="togglePump('on')">Start Pump</button>
                     <button class="btn btn-danger" onclick="togglePump('off')">Stop Pump</button>
                 </div>
-                <div style="margin-top: 15px;">
-                    <button class="btn btn-primary" onclick="autoMode()">Auto Mode</button>
-                </div>
             </div>
             
             <!-- Crop Information Card -->
@@ -701,28 +698,25 @@
             `;
         }
 
-        function togglePump(action) {
-            const statusElement = document.getElementById('pumpStatus');
-            if (action === 'on') {
-                statusElement.textContent = 'ON';
-                statusElement.style.color = '#2ecc71';
-                addAlert('Irrigation pump started');
-                simulateTelegramNotification('🚰 Pump started - Irrigation in progress');
-            } else {
-                statusElement.textContent = 'OFF';
-                statusElement.style.color = '#e74c3c';
-                addAlert('Irrigation pump stopped');
-                simulateTelegramNotification('⏹️ Pump stopped - Irrigation completed');
-            }
-            
-            // Update last irrigation time
-            document.getElementById('lastIrrigation').textContent = 'Just now';
-        }
+        async function togglePump(action) {
+            try {
+                // Send pump command to API
+                const response = await fetch('/api/sensor/pump', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command: action })
+                });
 
-        function autoMode() {
-            addAlert('Auto mode activated - System will manage irrigation automatically');
-            simulateTelegramNotification('🤖 Auto mode enabled - Smart irrigation active');
-        }
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Pump command sent:', result);
+                    
+                    // Update UI immediately for responsiveness
+                    const statusElement = document.getElementById('pumpStatus');
+                    if (action === 'on') {
+                        statusElement.textContent
 
         function addAlert(message) {
             const alertsList = document.getElementById('alertsList');
