@@ -701,73 +701,87 @@
             `;
         }
 
-       // --- Pump Control Logic with backend sync ---
-
-let pumpState = "off"; // default state
-
-async function togglePump(action) {
-    const pumpStatus = document.getElementById("pumpStatus");
-    const now = new Date().toLocaleString();
-
+        async function togglePump(action) {
     try {
-        // Send pump command to backend
-        const response = await fetch("/api/sensor/pump", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
+        // Send pump command to API
+        const response = await fetch('/api/sensor/pump', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ command: action })
         });
 
-        if (!response.ok) throw new Error(Server error: ${response.status});
-
-        const result = await response.json();
-        pumpState = result.command;
-
-        pumpStatus.textContent = pumpState.toUpperCase();
-        pumpStatus.style.color = (pumpState === "on") ? "#2ecc71" : "#e74c3c";
-        document.getElementById("lastIrrigation").textContent = now;
-
-        addAlert(🔄 Pump ${pumpState.toUpperCase()} (synced with server));
-
-    } catch (err) {
-        console.error("Error updating pump status:", err);
-        addAlert(⚠ Failed to send pump command (${action}) to server);
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Pump command sent:', result);
+            
+            // Update UI
+            const statusElement = document.getElementById('pumpStatus');
+            if (action === 'on') {
+                statusElement.textContent = 'ON';
+                statusElement.style.color = '#2ecc71';
+                addAlert('Irrigation pump started');
+                simulateTelegramNotification('🚰 Pump started - Irrigation in progress');
+            } else {
+                statusElement.textContent = 'OFF';
+                statusElement.style.color = '#e74c3c';
+                addAlert('Irrigation pump stopped');
+                simulateTelegramNotification('⏹️ Pump stopped - Irrigation completed');
+            }
+            
+            // Update last irrigation time
+            document.getElementById('lastIrrigation').textContent = 'Just now';
+        } else {
+            throw new Error('Failed to send pump command');
+        }
+    } catch (error) {
+        console.error('Error controlling pump:', error);
+        addAlert('Error: Failed to control pump - ' + error.message);
     }
 }
 
 async function autoMode() {
-    const soilText = document.getElementById("soilMoisture").innerText.replace("%", "");
-    const waterText = document.getElementById("waterLevel").innerText.replace("%", "");
-
-    const soilMoisture = parseInt(soilText) || 0;
-    const waterLevel = parseInt(waterText) || 0;
-
-    if (soilMoisture < 50 && waterLevel > 20) {
-        await togglePump("on");
-        addAlert("🤖 Auto Mode: Pump started (low soil moisture, enough water)");
-    } else {
-        await togglePump("off");
-        addAlert("🤖 Auto Mode: Pump stopped (conditions normal)");
+    try {
+        // Get current sensor data to determine if irrigation is needed
+        const response = await fetch('/api/sensor');
+        if (response.ok) {
+            const data = await response.json();
+            const soilMoisture = data.soil_moisture || 0;
+            
+            // Auto irrigation logic: turn on pump if soil moisture < 40%
+            if (soilMoisture < 40) {
+                await togglePump('on');
+                addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
+                simulateTelegramNotification('🤖 Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+            } else {
+                addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
+                simulateTelegramNotification('✅ Auto check complete - Moisture adequate: ' + soilMoisture + '%');
+            }
+        }
+    } catch (error) {
+        console.error('Error in auto mode:', error);
+        addAlert('Error: Auto mode failed - ' + error.message);
     }
 }
 
-// Helper function to log alerts in the Alerts card
-function addAlert(message) {
-    const alertsList = document.getElementById("alertsList");
-    const alertItem = document.createElement("div");
-    alertItem.className = "alert-item";
+        function addAlert(message) {
+            const alertsList = document.getElementById('alertsList');
+            const newAlert = document.createElement('div');
+            newAlert.className = 'alert-item';
+            newAlert.innerHTML = `
+                <div class="alert-time">Just now</div>
+                <div>${message}</div>
+            `;
+            alertsList.insertBefore(newAlert, alertsList.firstChild);
+            
+            // Keep only last 5 alerts
+            const alerts = alertsList.children;
+            if (alerts.length > 5) {
+                alertsList.removeChild(alerts[alerts.length - 1]);
+            }
+        }
 
-    const time = document.createElement("div");
-    time.className = "alert-time";
-    time.textContent = new Date().toLocaleString();
-
-    const msg = document.createElement("div");
-    msg.textContent = message;
-
-    alertItem.appendChild(time);
-    alertItem.appendChild(msg);
-
-    alertsList.prepend(alertItem);
-}
         function simulateTelegramNotification(message) {
             console.log('Telegram Notification:', message);
             // In real implementation, this would send to Telegram Bot API
