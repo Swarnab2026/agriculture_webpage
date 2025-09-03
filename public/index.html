@@ -781,10 +781,45 @@ async function autoMode() {
                 alertsList.removeChild(alerts[alerts.length - 1]);
             }
         }
-
+        //telegram bot details 
+const TELEGRAM_BOT_TOKEN = '8345668054:AAE0IZiPZAvIam5xidcWT-_P01xbb2nK8yg';
+const TELEGRAM_CHAT_ID = '1222168319';
         function simulateTelegramNotification(message) {
             console.log('Telegram Notification:', message);
             // In real implementation, this would send to Telegram Bot API
+            const telegramAPI = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
+    const payload = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: parseMode
+    };
+
+    try {
+        const response = await fetch(telegramAPI, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        
+        if (result.ok) {
+            console.log('Telegram notification sent successfully');
+            updateTelegramStatus('Connected', true);
+        } else {
+            console.error('Telegram API error:', result.description);
+            updateTelegramStatus('Error', false);
+        }
+        
+        return result.ok;
+    } catch (error) {
+        console.error('Network error sending Telegram message:', error);
+        updateTelegramStatus('Disconnected', false);
+        return false;
+    }
         }
 
         function updateLastUpdate() {
