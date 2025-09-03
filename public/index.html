@@ -787,40 +787,53 @@ async function autoMode() {
         
         function simulateTelegramNotification(message) {
             console.log('Telegram Notification:', message);
-//             // In real implementation, this would send to Telegram Bot API
-//             const telegramAPI = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+ const BOT_TOKEN = '8345668054:AAE0IZiPZAvIam5xidcWT-_P01xbb2nK8yg';
+    const CHAT_ID = '1222168319';
     
-//     const payload = {
-//         chat_id: TELEGRAM_CHAT_ID,
-//         text: message,
-//         parse_mode: parseMode
-//     };
-
-//     try {
-//         const response = await fetch(telegramAPI, {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify(payload)
-//         });
-
-//         const result = await response.json();
+    // Telegram Bot API endpoint
+    const telegramURL = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    
+    try {
+        // Format the message with timestamp and branding
+        const formattedMessage = `🌱 AgroSmart Alert\n\n${message}\n\nTime: ${new Date().toLocaleString()}\nLocation: Jorethang, South Sikkim`;
         
-//         if (result.ok) {
-//             console.log('Telegram notification sent successfully');
-//             updateTelegramStatus('Connected', true);
-//         } else {
-//             console.error('Telegram API error:', result.description);
-//             updateTelegramStatus('Error', false);
-//         }
+        // Send POST request to Telegram API
+        const response = await fetch(telegramURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: formattedMessage,
+                parse_mode: 'HTML'
+            })
+        });
+
+        // Check if the request was successful
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✓ Telegram message sent successfully:', result.message_id);
+            
+            // Add success notification to dashboard
+            addAlert('Telegram notification sent successfully');
+            return true;
+        } else {
+            const errorData = await response.json();
+            console.error('✗ Failed to send Telegram message:', errorData);
+            
+            // Add error notification to dashboard
+            addAlert(`Failed to send Telegram notification: ${errorData.description || 'Unknown error'}`);
+            return false;
+        }
         
-//         return result.ok;
-//     } catch (error) {
-//         console.error('Network error sending Telegram message:', error);
-//         updateTelegramStatus('Disconnected', false);
-//         return false;
-//     }
+    } catch (error) {
+        console.error('✗ Network error sending Telegram message:', error);
+        
+        // Add network error notification to dashboard
+        addAlert('Network error: Could not send Telegram notification');
+        return false;
+    }
         }
 
         function updateLastUpdate() {
