@@ -817,7 +817,7 @@ async function simulateTelegramNotification(message) {
             console.log('✓ Telegram message sent successfully:', result.message_id);
             
             // Add success notification to dashboard
-            addAlert('Telegram notification sent successfully');
+            // addAlert('Telegram notification sent successfully');
             return true;
         } else {
             const errorData = await response.json();
