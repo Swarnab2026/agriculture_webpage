@@ -1,20 +1,16 @@
-// api/sensor.js - Fixed version with better pump command handling
-let latestData = {
-  temperature: 0,
-  humidity: 0,
-  soil_moisture: 0,
-  water_level: 0
-};
-
-let pumpCommand = {
-  command: "none", // "on", "off", "none"
+// api/sensor.js - Handles sensor data only
+let latestSensorData = {
+  temperature: 25.0,
+  humidity: 65.0,
+  soil_moisture: 45.0,
+  water_level: 75.0,
   timestamp: Date.now()
 };
 
 export default function handler(req, res) {
-  // Enable CORS for web requests
+  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === "OPTIONS") {
@@ -22,76 +18,53 @@ export default function handler(req, res) {
     return;
   }
   
-  // Log all requests for debugging
-  console.log(`${req.method} ${req.url}`, req.body || '');
+  console.log(`Sensor API: ${req.method} request`);
   
   if (req.method === "POST") {
-    // Handle sensor data from Pico W
+    // Pico W sends sensor data here
     try {
-      latestData = req.body;
-      console.log('Sensor data updated:', latestData);
-      res.status(200).json({ message: "Sensor data updated", data: latestData });
+      const sensorData = req.body;
+      
+      // Validate sensor data
+      if (typeof sensorData.temperature === 'number' && 
+          typeof sensorData.humidity === 'number' && 
+          typeof sensorData.soil_moisture === 'number' && 
+          typeof sensorData.water_level === 'number') {
+        
+        latestSensorData = {
+          ...sensorData,
+          timestamp: Date.now()
+        };
+        
+        console.log('Sensor data updated:', latestSensorData);
+        res.status(200).json({ 
+          success: true, 
+          message: "Sensor data received",
+          timestamp: latestSensorData.timestamp
+        });
+      } else {
+        throw new Error('Invalid sensor data format');
+      }
     } catch (error) {
-      console.error('Error updating sensor data:', error);
-      res.status(500).json({ error: "Failed to update sensor data" });
+      console.error('Error processing sensor data:', error);
+      res.status(400).json({ 
+        success: false, 
+        error: "Invalid sensor data format" 
+      });
     }
   } 
   else if (req.method === "GET") {
-    // Handle different GET requests
-    if (req.url.includes("/pump")) {
-      // Pico W requesting pump commands
-      console.log('Pico W requesting pump command:', pumpCommand);
-      
-      const response = {
-        command: pumpCommand.command,
-        timestamp: pumpCommand.timestamp
-      };
-      
-      // Reset command to 'none' after 30 seconds to prevent stuck commands
-      const now = Date.now();
-      if (pumpCommand.command !== "none" && (now - pumpCommand.timestamp) > 30000) {
-        console.log('Clearing old pump command');
-        pumpCommand.command = "none";
-      }
-      
-      res.status(200).json(response);
-    } else {
-      // Web dashboard requesting sensor data
+    // Web dashboard requests sensor data here
+    try {
       res.status(200).json({
-        ...latestData,
-        pump_status: pumpCommand.command,
-        last_command: pumpCommand.timestamp
+        ...latestSensorData,
+        data_age_seconds: Math.floor((Date.now() - latestSensorData.timestamp) / 1000)
       });
-    }
-  }
-  else if (req.method === "PUT") {
-    // Handle pump control commands from web dashboard
-    if (req.url.includes("/pump")) {
-      try {
-        const { command } = req.body;
-        
-        if (["on", "off"].includes(command)) {
-          pumpCommand = {
-            command: command,
-            timestamp: Date.now()
-          };
-          
-          console.log('New pump command received:', pumpCommand);
-          
-          res.status(200).json({ 
-            message: `Pump command '${command}' sent`, 
-            command: pumpCommand.command,
-            timestamp: pumpCommand.timestamp
-          });
-        } else {
-          res.status(400).json({ error: "Invalid pump command. Use 'on' or 'off'" });
-        }
-      } catch (error) {
-        console.error('Error processing pump command:', error);
-        res.status(500).json({ error: "Failed to process pump command" });
-      }
-    } else {
-      res.status(404).json({ error: "Endpoint not found" });
+    } catch (error) {
+      console.error('Error sending sensor data:', error);
+      res.status(500).json({ 
+        error: "Failed to retrieve sensor data" 
+      });
     }
   }
   else {
