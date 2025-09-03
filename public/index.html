@@ -597,6 +597,7 @@
                 if (moisture < 30) {
                     moistureStatus.className = 'status-indicator status-danger';
                     moistureText.textContent = 'Critical - Immediate irrigation needed';
+                    simulateTelegramNotification('soli moisture is two low, need irrigation, soil moisture-'+moisture);
                 } else if (moisture < 50) {
                     moistureStatus.className = 'status-indicator status-warning';
                     moistureText.textContent = 'Low - Irrigation recommended';
@@ -620,6 +621,7 @@
                 } else if (temp < 15 || temp > 35 || humid < 40 || humid > 90) {
                     weatherStatus.className = 'status-indicator status-danger';
                     weatherText.textContent = 'Extreme conditions - Monitor crops';
+                    simulateTelegramNotification('temperature and humidity is no suitable, do needful, temperature-'+temp+', humidity-'+humid);
                 } else {
                     weatherStatus.className = 'status-indicator status-warning';
                     weatherText.textContent = 'Moderate conditions';
@@ -632,9 +634,12 @@
                 if (waterLevel < 20) {
                     waterStatus.className = 'status-indicator status-danger';
                     waterText.textContent = 'Critical - Refill tank immediately';
+                    addAlert('water level too low- Refill tank immediately, water level-'+waterLevel);
+                    simulateTelegramNotification('water level TOO LOW - Refill tank immediately, water level-'+waterLevel);
                 } else if (waterLevel < 40) {
                     waterStatus.className = 'status-indicator status-warning';
                     waterText.textContent = 'Low - Check rainwater system';
+                    simulateTelegramNotification('water level is LOW- Refill tank immediately, water level-'+waterLevel);
                 } else {
                     waterStatus.className = 'status-indicator status-good';
                     waterText.textContent = 'Sufficient water available';
