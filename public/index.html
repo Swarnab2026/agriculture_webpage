@@ -197,11 +197,6 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
         
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
         .crop-selector {
             width: 100%;
             padding: 12px;
@@ -396,14 +391,14 @@
                     <div class="card-title">Irrigation Control</div>
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <div>Status: <span id="pumpStatus" style="font-weight: bold; color: #e74c3c;">--</span></div>
+                    <div>Status: <span id="pumpStatus" style="font-weight: bold; color: #e74c3c;">OFF</span></div>
                     <div style="font-size: 0.9em; color: #7f8c8d; margin-top: 5px;">
-                        Last command: <span id="lastCommand">--</span>
+                        Last irrigation: <span id="lastIrrigation">--</span>
                     </div>
                 </div>
                 <div class="pump-controls">
-                    <button class="btn btn-success" id="pumpOnBtn" onclick="togglePump('on')">Start Pump</button>
-                    <button class="btn btn-danger" id="pumpOffBtn" onclick="togglePump('off')">Stop Pump</button>
+                    <button class="btn btn-success" onclick="togglePump('on')">Start Pump</button>
+                    <button class="btn btn-danger" onclick="togglePump('off')">Stop Pump</button>
                 </div>
                 <div style="margin-top: 15px;">
                     <button class="btn btn-primary" onclick="autoMode()">Auto Mode</button>
@@ -473,8 +468,8 @@
     </div>
 
     <script>
-        // Configuration - Update this with your actual API endpoint
-        const API_ENDPOINT = 'https://agriculture-webpage.vercel.app/api/sensor';
+        // Configuration
+        const API_ENDPOINT = '/api/sensor'; // Adjust this path based on your deployment
         let isConnected = false;
         let lastDataTime = null;
         
@@ -582,32 +577,6 @@
                 // Calculate estimated rainwater volume (assuming 1000L tank capacity)
                 const rainwaterVolume = Math.round((waterLevel / 100) * 1000);
                 document.getElementById('rainwaterVolume').textContent = rainwaterVolume + 'L';
-            }
-            
-            // Update pump status from API data
-            if (data.pump_status !== undefined) {
-                const pumpStatusEl = document.getElementById('pumpStatus');
-                if (data.pump_status === 'on' || data.pump_status === 'ON') {
-                    pumpStatusEl.textContent = 'ON';
-                    pumpStatusEl.style.color = '#2ecc71';
-                } else if (data.pump_status === 'off' || data.pump_status === 'OFF') {
-                    pumpStatusEl.textContent = 'OFF';
-                    pumpStatusEl.style.color = '#e74c3c';
-                } else {
-                    pumpStatusEl.textContent = 'UNKNOWN';
-                    pumpStatusEl.style.color = '#f39c12';
-                }
-            }
-            
-            // Update last command info
-            if (data.last_command !== undefined) {
-                const lastCommandEl = document.getElementById('lastCommand');
-                if (data.last_command && data.last_command !== 0) {
-                    const commandTime = new Date(data.last_command);
-                    lastCommandEl.textContent = commandTime.toLocaleTimeString();
-                } else {
-                    lastCommandEl.textContent = 'No commands yet';
-                }
             }
             
             // Update status indicators
@@ -732,90 +701,69 @@
             `;
         }
 
-        // Fixed pump control function
         async function togglePump(action) {
-            const pumpOnBtn = document.getElementById('pumpOnBtn');
-            const pumpOffBtn = document.getElementById('pumpOffBtn');
-            
-            // Disable buttons during operation
-            pumpOnBtn.disabled = true;
-            pumpOffBtn.disabled = true;
-            
-            try {
-                // Send pump command using POST with command in request body
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        command: action,
-                        timestamp: Date.now()
-                    })
-                });
+    try {
+        // Send pump command to API
+        const response = await fetch('/api/sensor/pump', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ command: action })
+        });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('Pump command sent successfully:', result);
-                    
-                    // Update UI immediately
-                    const statusElement = document.getElementById('pumpStatus');
-                    const lastCommandEl = document.getElementById('lastCommand');
-                    
-                    if (action === 'on') {
-                        statusElement.textContent = 'PENDING ON';
-                        statusElement.style.color = '#f39c12';
-                        addAlert('Pump start command sent - Waiting for confirmation');
-                    } else {
-                        statusElement.textContent = 'PENDING OFF';
-                        statusElement.style.color = '#f39c12';
-                        addAlert('Pump stop command sent - Waiting for confirmation');
-                    }
-                    
-                    lastCommandEl.textContent = new Date().toLocaleTimeString();
-                    
-                    // Refresh data after a short delay to get updated pump status
-                    setTimeout(() => {
-                        fetchSensorData();
-                    }, 2000);
-                    
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(`Server responded with status ${response.status}: ${errorText}`);
-                }
-            } catch (error) {
-                console.error('Error controlling pump:', error);
-                addAlert('Error: Failed to send pump command - ' + error.message);
-            } finally {
-                // Re-enable buttons
-                pumpOnBtn.disabled = false;
-                pumpOffBtn.disabled = false;
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Pump command sent:', result);
+            
+            // Update UI
+            const statusElement = document.getElementById('pumpStatus');
+            if (action === 'on') {
+                statusElement.textContent = 'ON';
+                statusElement.style.color = '#2ecc71';
+                addAlert('Irrigation pump started');
+                simulateTelegramNotification('🚰 Pump started - Irrigation in progress');
+            } else {
+                statusElement.textContent = 'OFF';
+                statusElement.style.color = '#e74c3c';
+                addAlert('Irrigation pump stopped');
+                simulateTelegramNotification('⏹️ Pump stopped - Irrigation completed');
+            }
+            
+            // Update last irrigation time
+            document.getElementById('lastIrrigation').textContent = 'Just now';
+        } else {
+            throw new Error('Failed to send pump command');
+        }
+    } catch (error) {
+        console.error('Error controlling pump:', error);
+        addAlert('Error: Failed to control pump - ' + error.message);
+    }
+}
+
+async function autoMode() {
+    try {
+        // Get current sensor data to determine if irrigation is needed
+        const response = await fetch('/api/sensor');
+        if (response.ok) {
+            const data = await response.json();
+            const soilMoisture = data.soil_moisture || 0;
+            
+            // Auto irrigation logic: turn on pump if soil moisture < 40%
+            if (soilMoisture < 40) {
+                await togglePump('on');
+                addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
+                simulateTelegramNotification('🤖 Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+            } else {
+                addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
+                simulateTelegramNotification('✅ Auto check complete - Moisture adequate: ' + soilMoisture + '%');
             }
         }
-
-        async function autoMode() {
-            try {
-                // Get current sensor data to determine if irrigation is needed
-                const data = await fetchSensorData();
-                
-                if (data && data.soil_moisture !== undefined) {
-                    const soilMoisture = data.soil_moisture;
-                    
-                    // Auto irrigation logic: turn on pump if soil moisture < 40%
-                    if (soilMoisture < 40) {
-                        await togglePump('on');
-                        addAlert(`Auto mode: Irrigation started (soil moisture: ${soilMoisture.toFixed(1)}%)`);
-                    } else {
-                        addAlert(`Auto mode: No irrigation needed (soil moisture: ${soilMoisture.toFixed(1)}%)`);
-                    }
-                } else {
-                    addAlert('Auto mode: Unable to read sensor data');
-                }
-            } catch (error) {
-                console.error('Error in auto mode:', error);
-                addAlert('Error: Auto mode failed - ' + error.message);
-            }
-        }
+    } catch (error) {
+        console.error('Error in auto mode:', error);
+        addAlert('Error: Auto mode failed - ' + error.message);
+    }
+}
 
         function addAlert(message) {
             const alertsList = document.getElementById('alertsList');
@@ -824,3 +772,56 @@
             newAlert.innerHTML = `
                 <div class="alert-time">Just now</div>
                 <div>${message}</div>
+            `;
+            alertsList.insertBefore(newAlert, alertsList.firstChild);
+            
+            // Keep only last 5 alerts
+            const alerts = alertsList.children;
+            if (alerts.length > 5) {
+                alertsList.removeChild(alerts[alerts.length - 1]);
+            }
+        }
+
+        function simulateTelegramNotification(message) {
+            console.log('Telegram Notification:', message);
+            // In real implementation, this would send to Telegram Bot API
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString();
+        }
+
+        // Check for stale data (if no updates for more than 2 minutes)
+        function checkDataFreshness() {
+            if (lastDataTime && (new Date() - lastDataTime) > 120000) { // 2 minutes
+                setConnectionStatus(false);
+                showError('No recent data from sensors. Last update: ' + lastDataTime.toLocaleTimeString());
+            }
+        }
+
+        // Initialize the dashboard
+        async function initDashboard() {
+            updateCropInfo();
+            updateLastUpdate();
+            
+            // Initial data fetch
+            await fetchSensorData();
+            
+            // Set up real-time updates every 10 seconds
+            setInterval(async () => {
+                await fetchSensorData();
+                updateLastUpdate();
+            }, 10000);
+            
+            // Check data freshness every 30 seconds
+            setInterval(checkDataFreshness, 30000);
+            
+            addAlert('Dashboard initialized - Connected to sensor network');
+        }
+
+        // Start the dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
