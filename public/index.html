@@ -703,8 +703,8 @@
 
         async function togglePump(action) {
     try {
-        // Send pump command to API
-        const response = await fetch('/api/sensor/pump', {
+        // Send pump command to new pump API
+        const response = await fetch('/api/pump', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -722,12 +722,12 @@
                 statusElement.textContent = 'ON';
                 statusElement.style.color = '#2ecc71';
                 addAlert('Irrigation pump started');
-                simulateTelegramNotification('🚰 Pump started - Irrigation in progress');
+                simulateTelegramNotification('Pump started - Irrigation in progress');
             } else {
                 statusElement.textContent = 'OFF';
                 statusElement.style.color = '#e74c3c';
                 addAlert('Irrigation pump stopped');
-                simulateTelegramNotification('⏹️ Pump stopped - Irrigation completed');
+                simulateTelegramNotification('Pump stopped - Irrigation completed');
             }
             
             // Update last irrigation time
@@ -753,10 +753,10 @@ async function autoMode() {
             if (soilMoisture < 40) {
                 await togglePump('on');
                 addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
-                simulateTelegramNotification('🤖 Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+                simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
             } else {
                 addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
-                simulateTelegramNotification('✅ Auto check complete - Moisture adequate: ' + soilMoisture + '%');
+                simulateTelegramNotification('Auto check complete - Moisture adequate: ' + soilMoisture + '%');
             }
         }
     } catch (error) {
