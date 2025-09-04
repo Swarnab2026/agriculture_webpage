@@ -1,9 +1,9 @@
 // api/sensor.js - Handles sensor data only
 let latestSensorData = {
-  temperature: 0,
-  humidity: 0,
-  soil_moisture: 0,
-  water_level: 0,
+  temperature: 30,
+  humidity: 40,
+  soil_moisture: 70,
+  water_level: 80,
   timestamp: Date.now(),
   picoOnline: "False"
 
