@@ -714,7 +714,7 @@
             `;
         }
 
-        async function togglePump(action) {
+        async function togglePump(action,data) {
     try {
         // Send pump command to new pump API
         const response = await fetch('/api/pump', {
