@@ -714,7 +714,7 @@
             `;
         }
 
-        async function togglePump(action,data) {
+        async function togglePump(action) {
     try {
         // Send pump command to new pump API
         const response = await fetch('/api/pump', {
@@ -724,6 +724,15 @@
             },
             body: JSON.stringify({ command: action })
         });
+        const r = await fetch('/api/sensor', {
+            method: 'GET',
+            
+            
+        });
+        const sensorData = await r.json();
+                    const isPicoOnline =sensorData.picoOnline;
+                    
+        
 
         if (response.ok) {
             const result = await response.json();
@@ -735,14 +744,14 @@
                 statusElement.textContent = 'ON';
                 statusElement.style.color = '#2ecc71';
                 addAlert('Irrigation pump started');
-                if(data.picoOnline=="True"){
+                if(isPicoOnline=="True"){
                 simulateTelegramNotification('Pump started - Irrigation in progress');
                 }
             } else {
                 statusElement.textContent = 'OFF';
                 statusElement.style.color = '#e74c3c';
                 addAlert('Irrigation pump stopped');
-                if(data.picoOnline=="True"){
+                if(isPicoOnline=="True"){
                 simulateTelegramNotification('Pump stopped - Irrigation completed');
                 }
             }
