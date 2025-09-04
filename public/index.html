@@ -597,7 +597,9 @@
                 if (moisture < 30) {
                     moistureStatus.className = 'status-indicator status-danger';
                     moistureText.textContent = 'Critical - Immediate irrigation needed';
+                if(data.picoOnline=="True"){
                     simulateTelegramNotification('soli moisture is two low, need irrigation, soil moisture-'+moisture);
+                }
                 } else if (moisture < 50) {
                     moistureStatus.className = 'status-indicator status-warning';
                     moistureText.textContent = 'Low - Irrigation recommended';
@@ -621,7 +623,9 @@
                 } else if (temp < 15 || temp > 35 || humid < 40 || humid > 90) {
                     weatherStatus.className = 'status-indicator status-danger';
                     weatherText.textContent = 'Extreme conditions - Monitor crops';
+                    if(data.picoOnline=="True"){
                     simulateTelegramNotification('temperature and humidity is no suitable, do needful, temperature-'+temp+', humidity-'+humid);
+                    }
                 } else {
                     weatherStatus.className = 'status-indicator status-warning';
                     weatherText.textContent = 'Moderate conditions';
@@ -635,11 +639,15 @@
                     waterStatus.className = 'status-indicator status-danger';
                     waterText.textContent = 'Critical - Refill tank immediately';
                     addAlert('water level too low- Refill tank immediately, water level-'+waterLevel);
+                    if(data.picoOnline=="True"){
                     simulateTelegramNotification('water level TOO LOW - Refill tank immediately, water level-'+waterLevel);
+                    }
                 } else if (waterLevel < 40) {
                     waterStatus.className = 'status-indicator status-warning';
                     waterText.textContent = 'Low - Check rainwater system';
+                    if(data.picoOnline=="True"){
                     simulateTelegramNotification('water level is LOW- Refill tank immediately, water level-'+waterLevel);
+                    }
                 } else {
                     waterStatus.className = 'status-indicator status-good';
                     waterText.textContent = 'Sufficient water available';
@@ -727,12 +735,16 @@
                 statusElement.textContent = 'ON';
                 statusElement.style.color = '#2ecc71';
                 addAlert('Irrigation pump started');
+                if(data.picoOnline=="True"){
                 simulateTelegramNotification('Pump started - Irrigation in progress');
+                }
             } else {
                 statusElement.textContent = 'OFF';
                 statusElement.style.color = '#e74c3c';
                 addAlert('Irrigation pump stopped');
+                if(data.picoOnline=="True"){
                 simulateTelegramNotification('Pump stopped - Irrigation completed');
+                }
             }
             
             // Update last irrigation time
@@ -758,10 +770,14 @@ async function autoMode() {
             if (soilMoisture < 40) {
                 await togglePump('on');
                 addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
+                if(data.picoOnline=="True"){
                 simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+                }
             } else {
                 addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
+                if(data.picoOnline=="True"){
                 simulateTelegramNotification('Auto check complete - Moisture adequate: ' + soilMoisture + '%');
+            }
             }
         }
     } catch (error) {
