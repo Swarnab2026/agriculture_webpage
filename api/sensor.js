@@ -22,7 +22,7 @@ export default function handler(req, res) {
   
   console.log(`Sensor API: ${req.method} request`);
   let lastSeen = 0;   // track Pico W last request
-let picoOnline = false;
+let picoOnline = "False";
 
 // Timer to check if Pico is alive
 setInterval(() => {
