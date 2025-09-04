@@ -524,7 +524,7 @@
                 humidity: "60-75%"
             }
         };
-
+        let picostatus="False";
         // Fetch real sensor data from API
         async function fetchSensorData() {
             try {
@@ -534,6 +534,7 @@
                 }
                 
                 const data = await response.json();
+                picostatus=data.picoOnline;
                 updateSensorDisplay(data);
                 setConnectionStatus(true);
                 lastDataTime = new Date();
@@ -597,7 +598,7 @@
                 if (moisture < 30) {
                     moistureStatus.className = 'status-indicator status-danger';
                     moistureText.textContent = 'Critical - Immediate irrigation needed';
-                if(data.picoOnline=="True"){
+                if(picostatus=="True"){
                     simulateTelegramNotification('soli moisture is two low, need irrigation, soil moisture-'+moisture);
                 }
                 } else if (moisture < 50) {
@@ -623,7 +624,7 @@
                 } else if (temp < 15 || temp > 35 || humid < 40 || humid > 90) {
                     weatherStatus.className = 'status-indicator status-danger';
                     weatherText.textContent = 'Extreme conditions - Monitor crops';
-                    if(data.picoOnline=="True"){
+                    if(picostatus=="True"){
                     simulateTelegramNotification('temperature and humidity is no suitable, do needful, temperature-'+temp+', humidity-'+humid);
                     }
                 } else {
@@ -639,13 +640,13 @@
                     waterStatus.className = 'status-indicator status-danger';
                     waterText.textContent = 'Critical - Refill tank immediately';
                     addAlert('water level too low- Refill tank immediately, water level-'+waterLevel);
-                    if(data.picoOnline=="True"){
+                    if(picostatus=="True"){
                     simulateTelegramNotification('water level TOO LOW - Refill tank immediately, water level-'+waterLevel);
                     }
                 } else if (waterLevel < 40) {
                     waterStatus.className = 'status-indicator status-warning';
                     waterText.textContent = 'Low - Check rainwater system';
-                    if(data.picoOnline=="True"){
+                    if(picostatus=="True"){
                     simulateTelegramNotification('water level is LOW- Refill tank immediately, water level-'+waterLevel);
                     }
                 } else {
