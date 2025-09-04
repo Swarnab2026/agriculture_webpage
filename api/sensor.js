@@ -48,7 +48,8 @@ setInterval(() => {
       if (typeof sensorData.temperature === 'number' && 
           typeof sensorData.humidity === 'number' && 
           typeof sensorData.soil_moisture === 'number' && 
-          typeof sensorData.water_level === 'number') {
+          typeof sensorData.water_level === 'number' &&
+          typeof sensorData.picoOnline === 'boolean') {
         
         latestSensorData = {
           ...sensorData,
