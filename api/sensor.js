@@ -4,7 +4,9 @@ let latestSensorData = {
   humidity: 65.0,
   soil_moisture: 45.0,
   water_level: 75.0,
-  timestamp: Date.now()
+  timestamp: Date.now(),
+  picoOnline: false
+
 };
 
 export default function handler(req, res) {
@@ -19,11 +21,28 @@ export default function handler(req, res) {
   }
   
   console.log(`Sensor API: ${req.method} request`);
+  let lastSeen = 0;   // track Pico W last request
+let picoOnline = false;
+
+// Timer to check if Pico is alive
+setInterval(() => {
+  const now = Date.now();
+  if (lastSeen && (now - lastSeen) > 120000) { // 2 minutes
+    picoOnline = false;
+    latestSensorData.picoOnline=false;
+    console.log("Pico W seems offline (no request in last 2 min)");
+  } else if (lastSeen) {
+    picoOnline = true;
+  }
+}, 30000);
   
   if (req.method === "POST") {
     // Pico W sends sensor data here
     try {
       const sensorData = req.body;
+      const now = Date.now();
+      lastSeen = now;        // update heartbeat
+      latestSensorData.picoOnline=true;
       
       // Validate sensor data
       if (typeof sensorData.temperature === 'number' && 
