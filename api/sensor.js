@@ -1,11 +1,11 @@
 // api/sensor.js - Handles sensor data only
 let latestSensorData = {
-  temperature: 25.0,
-  humidity: 65.0,
-  soil_moisture: 45.0,
-  water_level: 75.0,
+  temperature: 0,
+  humidity: 0,
+  soil_moisture: 0,
+  water_level: 0,
   timestamp: Date.now(),
-  picoOnline: false
+  picoOnline: "False"
 
 };
 
@@ -28,11 +28,11 @@ let picoOnline = false;
 setInterval(() => {
   const now = Date.now();
   if (lastSeen && (now - lastSeen) > 120000) { // 2 minutes
-    picoOnline = false;
+    picoOnline = "False";
     latestSensorData.picoOnline=false;
     console.log("Pico W seems offline (no request in last 2 min)");
   } else if (lastSeen) {
-    picoOnline = true;
+    picoOnline ="True";
   }
 }, 30000);
   
@@ -42,14 +42,14 @@ setInterval(() => {
       const sensorData = req.body;
       const now = Date.now();
       lastSeen = now;        // update heartbeat
-      latestSensorData.picoOnline=true;
+      latestSensorData.picoOnline="True";
       
       // Validate sensor data
       if (typeof sensorData.temperature === 'number' && 
           typeof sensorData.humidity === 'number' && 
           typeof sensorData.soil_moisture === 'number' && 
           typeof sensorData.water_level === 'number' &&
-          typeof sensorData.picoOnline === 'boolean') {
+          typeof sensorData.picoOnline === 'string') {
         
         latestSensorData = {
           ...sensorData,
