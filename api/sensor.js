@@ -48,7 +48,7 @@ setInterval(() => {
       const sensorData = req.body;
       const now = Date.now();
       lastSeen = now;        // update heartbeat
-      latestSensorData.picoOnline="True";
+      // latestSensorData.picoOnline="True";
       
       // Validate sensor data
       if (typeof sensorData.temperature === 'number' && 
