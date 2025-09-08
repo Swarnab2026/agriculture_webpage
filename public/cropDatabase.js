@@ -4,7 +4,7 @@
 
 const cropDatabase = {
     rice: {
-        optimalMoisture: "60-70%",
+        optimalMoisture: 65,
         growthStage: "Flowering",
         waterFrequency: "Daily",
         season: "Kharif",
