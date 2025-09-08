@@ -1,9 +1,9 @@
 // api/sensor.js - Handles sensor data only
 let latestSensorData = {
-  temperature: 30,
-  humidity: 40,
-  soil_moisture: 70,
-  water_level: 80,
+  temperature: 0,
+  humidity: 0,
+  soil_moisture: 0,
+  water_level: 0,
   timestamp: Date.now(),
   picoOnline: "False"
 
@@ -27,13 +27,19 @@ let picoOnline = "False";
 // Timer to check if Pico is alive
 setInterval(() => {
   const now = Date.now();
-  if (lastSeen && (now - lastSeen) > 20000) { // 20 seconds
+  if (lastSeen && (now - lastSeen) > 120000) { // 2 minutes
     picoOnline = "False";
-    latestSensorData.picoOnline=false;
+    latestSensorData.picoOnline="False";
     console.log("Pico W seems offline (no request in last 2 min)");
-  } else if (lastSeen) {
-    picoOnline ="True";
   }
+  else{
+    picoOnline="True";
+    latestSensorData.picoOnline="True";
+    console.log("Pico W is online");
+  }
+  //  else if (lastSeen) {
+  //   picoOnline ="True";
+  // }
 }, 30000);
   
   if (req.method === "POST") {
