@@ -545,7 +545,7 @@
             const weatherText = document.getElementById('weatherText');
             const waterStatus = document.getElementById('waterStatus');
             const waterText = document.getElementById('waterText');
-             const cropData = cropDatabase[selectedCrop];
+            const cropData = cropDatabase[selectedCrop];
             
             // Update moisture status
             if (data.soil_moisture !== undefined) {
@@ -860,4 +860,4 @@ async function simulateTelegramNotification(message) {
         document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
-</html>
+</html><script src="cropDatabase.js"></script>
