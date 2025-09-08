@@ -23,7 +23,7 @@ function initializeTimer() {
     setInterval(() => {
       const now = Date.now();
       
-      if (lastSeen && (now - lastSeen) > 120000) { // 2 minutes
+      if (lastSeen && (now - lastSeen) > 30000) { // 2 minutes
         if (picoOnline === "True") {
           picoOnline = "False";
           latestSensorData.picoOnline = "False";
@@ -35,7 +35,7 @@ function initializeTimer() {
         latestSensorData.picoOnline = "True";
         console.log("Pico W is back online");
       }
-    }, 30000); // Check every 30 seconds
+    }, 10000); // Check every 30 seconds
     
     console.log("Pico W monitoring timer initialized");
   }
