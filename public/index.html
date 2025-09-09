@@ -545,20 +545,22 @@
             const weatherText = document.getElementById('weatherText');
             const waterStatus = document.getElementById('waterStatus');
             const waterText = document.getElementById('waterText');
+            const selectedCrop = document.getElementById('cropSelector').value;
+            const cropData = cropDatabase[selectedCrop];
             
             // Update moisture status
             if (data.soil_moisture !== undefined) {
                 const moisture = data.soil_moisture;
-                if (moisture < 30) {
+                if (moisture < cropData.optimalMoisture-20) {
                     moistureStatus.className = 'status-indicator status-danger';
                     moistureText.textContent = 'Critical - Immediate irrigation needed';
                 if(picostatus=="True"){
                     simulateTelegramNotification('soli moisture is two low, need irrigation, soil moisture-'+moisture);
                 }
-                } else if (moisture < 50) {
+                } else if (moisture < cropData.optimalMoisture-5 && moisture>cropData.optimalMoisture-20) {
                     moistureStatus.className = 'status-indicator status-warning';
                     moistureText.textContent = 'Low - Irrigation recommended';
-                } else if (moisture < 70) {
+                } else if (moisture > cropData.optimalMoisture-5 && moisture<cropData.optimalMoisture+5) {
                     moistureStatus.className = 'status-indicator status-good';
                     moistureText.textContent = 'Good - Optimal moisture level';
                 } else {
