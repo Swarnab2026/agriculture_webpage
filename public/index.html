@@ -574,10 +574,10 @@
                 const temp = data.temperature;
                 const humid = data.humidity;
                 
-                if (temp >= 20 && temp <= 30 && humid >= 60 && humid <= 80) {
+                if (temp >= cropData.temperature-5 && temp <= cropData.temperature+5 && humid >= cropData.humidity-5 && humid <= cropData.humidity+5) {
                     weatherStatus.className = 'status-indicator status-good';
                     weatherText.textContent = 'Optimal growing conditions';
-                } else if (temp < 15 || temp > 35 || humid < 40 || humid > 90) {
+                } else if (temp < cropData.temperature-10 || temp > cropData.temperature+10 || humid < cropData.humidity-25 || humid > cropData.humidity+25) {
                     weatherStatus.className = 'status-indicator status-danger';
                     weatherText.textContent = 'Extreme conditions - Monitor crops';
                     if(picostatus=="True"){
