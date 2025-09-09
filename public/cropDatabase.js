@@ -8,48 +8,48 @@ const cropDatabase = {
         growthStage: "Flowering",
         waterFrequency: "Daily",
         season: "Kharif",
-        temperature: "20-35°C",
-        humidity: "80-90%"
+        temperature: 25,
+        humidity: 85
     },
     wheat: {
-        optimalMoisture: "50-65%",
+        optimalMoisture: 60,
         growthStage: "Grain filling",
         waterFrequency: "Every 2-3 days",
         season: "Rabi",
-        temperature: "15-25°C",
-        humidity: "50-70%"
+        temperature: 20,
+        humidity: 60
     },
     maize: {
-        optimalMoisture: "55-70%",
+        optimalMoisture:60,
         growthStage: "Vegetative",
         waterFrequency: "Daily",
         season: "Kharif/Rabi",
-        temperature: "18-30°C",
-        humidity: "60-80%"
+        temperature: 25,
+        humidity: 70
     },
     tomato: {
-        optimalMoisture: "65-75%",
+        optimalMoisture: 70,
         growthStage: "Fruit development",
         waterFrequency: "Daily",
         season: "Year-round",
-        temperature: "20-30°C",
-        humidity: "60-70%"
+        temperature: 25,
+        humidity: 65
     },
     potato: {
-        optimalMoisture: "55-65%",
+        optimalMoisture: 75,
         growthStage: "Tuber formation",
         waterFrequency: "Every 2 days",
         season: "Rabi",
-        temperature: "15-20°C",
-        humidity: "70-80%"
+        temperature: 18,
+        humidity: 75
     },
     cabbage: {
-        optimalMoisture: "70-80%",
+        optimalMoisture: 75,
         growthStage: "Head formation",
         waterFrequency: "Daily",
         season: "Winter",
-        temperature: "15-25°C",
-        humidity: "60-75%"
+        temperature: 20,
+        humidity: 70
     }
 };
 
