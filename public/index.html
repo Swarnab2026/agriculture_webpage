@@ -672,6 +672,9 @@
         }
 
         async function togglePump(action) {
+               if (action === 'on' || action === 'off') {
+        stopAutoMode(); // manual override takes priority
+    }
     try {
         // Send pump command to new pump API
         const response = await fetch('/api/pump', {
@@ -724,31 +727,52 @@
     }
 }
 
-async function autoMode() {
+let autoModeInterval = null;
+
+async function checkAutoMode() {
     try {
-        // Get current sensor data to determine if irrigation is needed
         const response = await fetch('/api/sensor');
-        if (response.ok) {
-            const data = await response.json();
-            const soilMoisture = data.soil_moisture || 0;
-            
-            // Auto irrigation logic: turn on pump if soil moisture < 40%
-            if (soilMoisture < 40) {
-                await togglePump('on');
-                addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
-                if(data.picoOnline=="True"){
-                simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
-                }
-            } else {
-                addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
-                if(data.picoOnline=="True"){
-                simulateTelegramNotification('Auto check complete - Moisture adequate: ' + soilMoisture + '%');
-            }
-            }
+        if (!response.ok) {
+            console.error('Auto mode: failed to fetch sensor data');
+            return;
         }
+
+        const data = await response.json();
+        const soilMoisture = data.soil_moisture || 0;
+        const isPicoOnline = data.picoOnline === true;
+
+        if (soilMoisture < 40) {
+            await togglePump('on');
+            addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
+            if (isPicoOnline) {
+                simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+            }
+        } else {
+            await togglePump('off');
+            addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
+        }
+
     } catch (error) {
-        console.error('Error in auto mode:', error);
-        addAlert('Error: Auto mode failed - ' + error.message);
+        console.error('Error in auto mode check:', error);
+        addAlert('Error: Auto mode check failed - ' + error.message);
+    }
+}
+
+function startAutoMode() {
+    if (autoModeInterval) return; // already running, don't stack intervals
+
+    addAlert('Auto mode enabled - monitoring soil moisture');
+
+    // Run once immediately, then repeat
+    checkAutoMode();
+    autoModeInterval = setInterval(checkAutoMode, 60000); // check every 60s
+}
+
+function stopAutoMode() {
+    if (autoModeInterval) {
+        clearInterval(autoModeInterval);
+        autoModeInterval = null;
+        addAlert('Auto mode disabled');
     }
 }
 
