@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+    // Block access if not logged in — redirect to login page
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'index.html';
+    }
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroSmart - Smart Irrigation Dashboard</title>
@@ -312,6 +318,32 @@
             margin-bottom: 15px;
             font-size: 0.9em;
         }
+
+        .logout-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .btn-logout {
+            padding: 8px 18px;
+            font-size: 0.85em;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -320,7 +352,9 @@
             <h1>🌱 AgroSmart Dashboard</h1>
             <p>Smart Irrigation System for Jorethang, South Sikkim</p>
         </div>
-        
+        <div class="logout-bar">
+           <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+        </div>
         <!-- Error indicator (hidden by default) -->
         <div id="errorIndicator" class="error-indicator" style="display: none;">
             ⚠️ Unable to connect to sensor data. Displaying last known values.
@@ -841,7 +875,10 @@ function toggleAutoMode() {
         btn.classList.add('btn-warning');
     }
 }
-
+    function logout() {
+        sessionStorage.removeItem('isLoggedIn');
+        window.location.href = 'index.html';
+}
         function addAlert(message) {
             const alertsList = document.getElementById('alertsList');
             const newAlert = document.createElement('div');
