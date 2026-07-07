@@ -671,9 +671,16 @@
             `;
         }
 
-        async function togglePump(action) {
-               if (action === 'on' || action === 'off') {
-        stopAutoMode(); // manual override takes priority
+        async function togglePump(action, isAutoTriggered = false) {
+              if (!isAutoTriggered && (action === 'on' || action === 'off')) {
+        if (isAutoModeOn) {
+            stopAutoMode();
+            isAutoModeOn = false;
+            const btn = document.getElementById('autoModeBtn');
+            btn.textContent = 'Auto Mode';
+            btn.classList.remove('btn-warning');
+            btn.classList.add('btn-primary');
+        }
     }
     try {
         // Send pump command to new pump API
@@ -742,13 +749,13 @@ async function checkAutoMode() {
         const isPicoOnline = data.picoOnline === true;
 
         if (soilMoisture < 40) {
-            await togglePump('on');
+            await togglePump('on', true);
             addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
             if (isPicoOnline) {
                 simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
             }
         } else {
-            await togglePump('off');
+            await togglePump('off', true);
             addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
         }
 
