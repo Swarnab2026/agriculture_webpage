@@ -709,19 +709,39 @@
             // Update UI
             const statusElement = document.getElementById('pumpStatus');
             if (action === 'on') {
+                if (!isAutoTriggered){
                 statusElement.textContent = 'ON';
                 statusElement.style.color = '#2ecc71';
                 addAlert('Irrigation pump started');
                 if(isPicoOnline=="True"){
                 simulateTelegramNotification('Pump started - Irrigation in progress');
                 }
+                } else{
+                    statusElement.textContent = 'ON ( AUTO MODE )';
+                statusElement.style.color = '#2ecc71';
+                addAlert('Irrigation pump started ( AUTO MODE )');
+                if(isPicoOnline=="True"){
+                simulateTelegramNotification('Pump started - Irrigation in progress ( AUTO MODE )');
+                } 
+                }
+                    
+                
             } else {
+                if(!isAutoTriggered){
                 statusElement.textContent = 'OFF';
                 statusElement.style.color = '#e74c3c';
                 addAlert('Irrigation pump stopped');
                 if(isPicoOnline=="True"){
                 simulateTelegramNotification('Pump stopped - Irrigation completed');
                 }
+                } else{
+                     statusElement.textContent = 'OFF ( AUTO MODE )';
+                statusElement.style.color = '#e74c3c';
+                addAlert('Irrigation pump stopped ( AUTO MODE )');
+                if(isPicoOnline=="True"){
+                simulateTelegramNotification('Pump stopped - Irrigation completed ( AUTO MODE )');
+                }
+                }            
             }
             
             // Update last irrigation time
