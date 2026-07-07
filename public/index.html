@@ -134,7 +134,7 @@
 
             if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
                 sessionStorage.setItem('isLoggedIn', 'true');
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard.html';
             } else {
                 errorBox.textContent = 'Invalid username or password';
                 errorBox.style.display = 'block';
