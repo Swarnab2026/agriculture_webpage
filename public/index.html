@@ -670,6 +670,7 @@
                 </div>
             `;
         }
+        let lastAutAction = null; 
 
         async function togglePump(action, isAutoTriggered = false) {
               if (!isAutoTriggered && (action === 'on' || action === 'off')) {
@@ -748,16 +749,27 @@ async function checkAutoMode() {
         const soilMoisture = data.soil_moisture || 0;
         const isPicoOnline = data.picoOnline === true;
 
-        if (soilMoisture < 40) {
-            await togglePump('on', true);
-            addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
-            if (isPicoOnline) {
-                simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+       if (soilMoisture < 40) {
+            if (lastAutoAction !== 'on') {
+                await togglePump('on', true); // isAutoTriggered = true
+                addAlert('Auto mode: Irrigation started (soil moisture: ' + soilMoisture + '%)');
+                if (isPicoOnline) {
+                    simulateTelegramNotification('Auto irrigation triggered - Moisture: ' + soilMoisture + '%');
+                }
+                lastAutoAction = 'on';
             }
         } else {
-            await togglePump('off', true);
-            addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
+            if (lastAutoAction !== 'off') {
+                await togglePump('off', true);
+                addAlert('Auto mode: No irrigation needed (soil moisture: ' + soilMoisture + '%)');
+
+                if (isPicoOnline) {
+                    simulateTelegramNotification('Auto irrigation stopped - Moisture: ' + soilMoisture + '%');
+                }
+                lastAutoAction = 'off';
+            }
         }
+
 
     } catch (error) {
         console.error('Error in auto mode check:', error);
@@ -779,6 +791,13 @@ function stopAutoMode() {
     if (autoModeInterval) {
         clearInterval(autoModeInterval);
         autoModeInterval = null;
+
+        // If auto mode had turned the pump on, turn it off when stopping auto mode
+        if (lastAutoAction === 'on') {
+            togglePump('off', true); // isAutoTriggered = true, so it doesn't re-cancel auto mode (already cancelled)
+        }
+
+        lastAutoAction = null;
         addAlert('Auto mode disabled');
     }
 }
