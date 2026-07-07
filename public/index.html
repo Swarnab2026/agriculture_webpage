@@ -401,7 +401,7 @@
                     <button class="btn btn-danger" onclick="togglePump('off')">Stop Pump</button>
                 </div>
                 <div style="margin-top: 15px;">
-                    <button class="btn btn-primary" onclick="autoMode()">Auto Mode</button>
+                    <button class="btn btn-primary" onclick="toggleAutoMode()">Auto Mode</button>
                 </div>
             </div>
             
@@ -773,6 +773,26 @@ function stopAutoMode() {
         clearInterval(autoModeInterval);
         autoModeInterval = null;
         addAlert('Auto mode disabled');
+    }
+}
+        
+let isAutoModeOn = false;
+
+function toggleAutoMode() {
+    const btn = document.getElementById('autoModeBtn');
+
+    if (isAutoModeOn) {
+        stopAutoMode();
+        isAutoModeOn = false;
+        btn.textContent = 'Auto Mode';
+        btn.classList.remove('btn-warning');
+        btn.classList.add('btn-primary');
+    } else {
+        startAutoMode();
+        isAutoModeOn = true;
+        btn.textContent = 'Auto Mode: ON';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-warning');
     }
 }
 
