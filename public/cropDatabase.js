@@ -2,6 +2,11 @@
 // Crop Database for AgroSmart Irrigation System
 // Contains crop-specific information for farmers in Jorethang, South Sikkim
 
+const ADMIN_CREDENTIALS = {
+    username: "admin",
+    password: "admin123"
+};
+
 const cropDatabase = {
     rice: {
         optimalMoisture: 65,
