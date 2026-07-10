@@ -4,7 +4,7 @@
 let latestSensorData = {
   temperature: 30,
   humidity: 84,
-  soil_moisture: 36,
+  soil_moisture: 58,
   water_level: 65,
   timestamp: Date.now(),
   picoOnline: "True"
