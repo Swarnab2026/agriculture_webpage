@@ -2,12 +2,12 @@
 
 // Global variables (persistent across requests)
 let latestSensorData = {
-  temperature: 30,
-  humidity: 84,
-  soil_moisture: 58,
-  water_level: 65,
+  temperature: 0,
+  humidity: 0,
+  soil_moisture: 0,
+  water_level: 0,
   timestamp: Date.now(),
-  picoOnline: "True"
+  picoOnline: "False"
 };
 
 let lastSeen = 0;   // track Pico W last request
